@@ -117,16 +117,16 @@ int myls(struct dirent * dir)
 
 	printf(" %ld", s.st_nlink); // number of hardlinks
 
-	struct passwd * usr; // need that to get user data 
-	usr = getpwuid(s.st_uid); // find data using ID from stat
-	printf(" %s", usr->pw_name);
-	struct group * grp;
-	grp = getgrgid(s.st_gid); // just like user, but group now
-	printf(" %s", grp->gr_name);
+	struct passwd * user; // need that to get user data 
+	user = getpwuid(s.st_uid); // find data using ID from stat
+	printf(" %s", user->pw_name);
+	struct group * group;
+	group = getgrgid(s.st_gid); // just like user, but group now
+	printf(" %s", group->gr_name);
 	printf(" %5d", (int)s.st_size); //size of the file
 	struct tm * time_ptr;
-	time_t It = s.st_ctime;
-	time_ptr = localtime(&It);
+	time_t time = s.st_ctime;
+	time_ptr = localtime(&time);
 	printf(" %s", monthNumberToName(time_ptr->tm_mon+1));
 	printf(" %02d", time_ptr->tm_mday);
 	printf(" %02d:%02d ", time_ptr->tm_hour, time_ptr->tm_min);
