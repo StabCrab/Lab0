@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +9,9 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+
+char path[PATH_MAX];
+
 char * monthNumberToName(int monthNumber)
 {
 	char* month;
@@ -51,18 +55,19 @@ char * monthNumberToName(int monthNumber)
                         strcpy (month, "Dec");
                         break;
 	}
+	return month;
 }
 int myls(struct dirent * dir)
 {
-	char* path;
-	path = calloc(sizeof(char)*(strlen(dir->d_name)) + 2, sizeof(char));
-	path[0] = '.';
-	path[1] = '/';
-	strcpy(&(path[2]), dir->d_name);
-
+	char buf[PATH_MAX];
+	buf[0] = '\0';
 	struct stat s;
 	memset(&s, 0, sizeof(struct stat));
-	stat(path, &s);
+	strcat(buf, path);
+	strcat(buf, "/");
+	strcat(buf,dir->d_name);
+	//printf("%s \n",buf);
+	stat(buf, &s);
 	if (s.st_mode & S_IFDIR) //is directory
 		printf("d");
 	else
@@ -114,16 +119,15 @@ int myls(struct dirent * dir)
 		printf("x");
 	else
 		printf ("-");
-
-	printf(" %ld", s.st_nlink); // number of hardlinks
+	printf(" %2ld", s.st_nlink); // number of hardlinks
 
 	struct passwd * user; // need that to get user data 
 	user = getpwuid(s.st_uid); // find data using ID from stat
 	printf(" %s", user->pw_name);
 	struct group * group;
 	group = getgrgid(s.st_gid); // just like user, but group now
-	printf(" %s", group->gr_name);
-	printf(" %5d", (int)s.st_size); //size of the file
+	printf(" %s ", group->gr_name);
+	printf("%5d", (int)s.st_size); //size of the file
 	struct tm * time_ptr;
 	time_t time = s.st_ctime;
 	time_ptr = localtime(&time);
@@ -132,7 +136,6 @@ int myls(struct dirent * dir)
 	printf(" %02d:%02d ", time_ptr->tm_hour, time_ptr->tm_min);
 	printf("%s", dir->d_name);
 	printf("\n");
-	
 	return 0;
 }
 int main (int argc, char** argv)
@@ -164,10 +167,13 @@ int main (int argc, char** argv)
 		}
                 counter++;
         }
-
+	//printf("%s \n",argv[countToPath]);
 	DIR *dir;
 	if (isPath)
-		dir = opendir(argv[countToPath]);
+	{
+		realpath(argv[countToPath], path);
+		dir = opendir(path);
+	}
 	else
 		dir = opendir(".");
 	if (dir == NULL)
@@ -180,12 +186,13 @@ int main (int argc, char** argv)
         	struct stat s;
         	memset(&s, 0, sizeof(struct stat));
 		if (isPath)
-			stat(argv[countToPath], &s);
+		{
+			stat(path, &s);
+		}
 		else
         		stat(".", &s);
 
 		printf("total %ld \n", s.st_blocks);
-
 		while ((de = readdir(dir)) != NULL)
         	{
                 	if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
