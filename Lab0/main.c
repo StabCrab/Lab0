@@ -57,17 +57,23 @@ char * monthNumberToName(int monthNumber)
 	}
 	return month;
 }
-int myls(struct dirent * dir)
+int myls(struct dirent * dir, bool isPath)
 {
 	char buf[PATH_MAX];
 	buf[0] = '\0';
 	struct stat s;
 	memset(&s, 0, sizeof(struct stat));
-	strcat(buf, path);
-	strcat(buf, "/");
-	strcat(buf,dir->d_name);
+	if (isPath)
+	{
+		strcat(buf, path);
+        	strcat(buf, "/");
+        	strcat(buf,dir->d_name);
+		stat(buf, &s);
+
+	}
 	//printf("%s \n",buf);
-	stat(buf, &s);
+	else
+		stat(".", &s);
 	if (s.st_mode & S_IFDIR) //is directory
 		printf("d");
 	else
@@ -123,10 +129,12 @@ int myls(struct dirent * dir)
 
 	struct passwd * user; // need that to get user data 
 	user = getpwuid(s.st_uid); // find data using ID from stat
-	printf(" %s", user->pw_name);
+	if (strlen(user->pw_name) > 0)
+		printf(" %s", user->pw_name);
 	struct group * group;
 	group = getgrgid(s.st_gid); // just like user, but group now
-	printf(" %s ", group->gr_name);
+	if (strlen(group->gr_name) > 0)
+		printf(" %s ", group->gr_name);
 	printf("%5d", (int)s.st_size); //size of the file
 	struct tm * time_ptr;
 	time_t time = s.st_ctime;
@@ -198,7 +206,7 @@ int main (int argc, char** argv)
                 	if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
                         	continue;
                 	else
-                		myls(de);
+                		myls(de, isPath);
         	}
 	}
 	else
