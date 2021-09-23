@@ -9,7 +9,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
-
+#include <getopt.h>
 char path[PATH_MAX];
 
 char * monthNumberToName(int monthNumber)
@@ -158,6 +158,11 @@ void myls(struct dirent * dir, bool isPath)
 
 int main (int argc, char** argv)
 {
+    static struct option long_options[] =
+    {
+        {"l", no_argument, NULL, 'l'}
+    };
+    int option_index = 0;
     struct dirent *de;
     int c;
     bool isPath = false;
@@ -166,7 +171,7 @@ int main (int argc, char** argv)
     int countToPath;
     while (counter < argc)
     {
-        if ((c = getopt(argc, argv, "l")) != -1)
+        if ((c = getopt_long(argc, argv, "l", long_options, &option_index)) != -1)
         {
             switch (c)
             {
