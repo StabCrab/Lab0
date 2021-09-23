@@ -135,17 +135,17 @@ void myls(struct dirent * dir, bool isPath)
 
     struct passwd * user; // need that to get user data
     user = getpwuid(s.st_uid); // find data using ID from stat
-    if (user->pw_name != 0)
+    if (user != 0)
         printf(" %s", user->pw_name);
     else
         printf(" ");
     struct group * group;
     group = getgrgid(s.st_gid); // just like user, but group now
-    if (group->gr_name != 0)
+    if (group != 0)
         printf(" %s ", group->gr_name);
     else
         printf(" ");
-    printf("%5ld", (long)s.st_size); //size of the file
+    printf("%5ld", (long long int)s.st_size); //size of the file
     struct tm * time_ptr;
     time_t time = s.st_ctime;
     time_ptr = localtime(&time);
