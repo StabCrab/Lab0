@@ -51,7 +51,7 @@ int findLast(char* string, char symbol)
     }
     return -1;
 }
-int addToArchive(FILE* archive, char* path)
+int addToArchive(FILE* archive, char* path, FILE* r_archive)
 {
     FILE* file;
     char name[256];
@@ -64,6 +64,32 @@ int addToArchive(FILE* archive, char* path)
             name[i - lastSlash - 1] = '\0';
         else
             name[i - lastSlash - 1] = path[i];
+    }
+    long int overallSize = 0;
+    int filesCounter = 0;
+    char buf[100000];
+    size_t length = 100000;
+    char * b = buf;
+    while (true)
+    {
+        if (getline(&b, &length, r_archive) == EOF)
+        {
+            break;
+        }
+        if (strcmp(buf, "FILE:\n") == 0)
+        {
+            getline(&b, &length, r_archive);
+            for (int i = 0; i < strlen(buf); ++i)
+            {
+                if (buf[i] == '\n')
+                    buf[i] = '\0';
+            }
+            if (strcmp(buf, name) == 0)
+            {
+                printf("%s already exists", name);
+                return 1;
+            }
+        }
     }
     int byteCount = 0;
     int ch;
@@ -212,7 +238,6 @@ void stats(FILE * archive)
     char buf[100000];
     size_t length = 100000;
     char * b = buf;
-
     while (true)
     {
         if (getline(&b, &length, archive) == EOF)
@@ -221,8 +246,9 @@ void stats(FILE * archive)
         }
         if (strcmp(buf, "FILE:\n") == 0)
         {
-            filesCounter++;
             getline(&b, &length, archive);
+            printf("%d)%s", filesCounter + 1, buf);
+            filesCounter++;
             getline(&b, &length, archive);
             int it = 0;
             int permissions = getNearestNumberFromCString(b, &it);
@@ -232,6 +258,7 @@ void stats(FILE * archive)
             char group[20];
             getNearestStringFromCString(b, &it, group);
             long int size = getNearestNumberFromCString(b, &it);
+            printf("SIZE: %ld \n", size);
             overallSize += size;
         }
     }
@@ -313,6 +340,7 @@ int main(int argc, char** argv)
                 return 1;
             }
             FILE* archive;
+            FILE* r_archive;
             for (int i = 0; i < filesCounter; ++i)
             {
                 if (strpbrk(fileName[i], "/.") == NULL)
@@ -325,11 +353,12 @@ int main(int argc, char** argv)
                     realpath(buf, fileName[i]);
                 }
                 archive = fopen( archName,"a");
+                r_archive = fopen (archName, "r");
                 if (archive == NULL)
                 {
                     printf("ERROR: something went wrong");
                 }
-                addToArchive(archive, fileName[i]);
+                addToArchive(archive, fileName[i], r_archive);
             }
             break;
         }
@@ -367,6 +396,17 @@ int main(int argc, char** argv)
         case 's':
         {
             FILE * archive;
+            {
+                int it = 0;
+                while(archName[it] != '\0')
+                {
+                    it++;
+                }
+                if (!(archName[it - 1] == 'h' && archName[it - 2] == 'c' && archName[it - 3] == 'r' && archName[it - 4] == 'a' && archName[it - 5] == '.'))
+                {
+                    strcat(archName, ".arch");
+                }
+            }
             archive = fopen(archName, "r");
             if (archive == NULL)
             {
