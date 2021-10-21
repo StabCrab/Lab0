@@ -113,6 +113,11 @@ int extractFromArchive(char* fileName, char* archName)
 {
     FILE * archive;
     archive = fopen(archName, "r");
+    if (archive == NULL)
+    {
+        printf("Can't find archive\n");
+        return 1;
+    }
     strcat(fileName, "\n");
     char buf[100000];
     size_t length = 100000;
@@ -335,7 +340,17 @@ int main(int argc, char** argv)
                 printf("ERROR: no archive name");
                 return 1;
             }
-            strcat(archName, ".arch");
+            {
+                int it = 0;
+                while(archName[it] != '\0')
+                {
+                    it++;
+                }
+                if (!(archName[it - 1] == 'h' && archName[it - 2] == 'c' && archName[it - 3] == 'r' && archName[it - 4] == 'a' && archName[it - 5] == '.'))
+                {
+                    strcat(archName, ".arch");
+                }
+            }
             if (filesCounter == 0)
             {
                 printf("ERROR: no files to work with");
