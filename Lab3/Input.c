@@ -1,35 +1,38 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <time.h>
 #include <sys/shm.h>
-#include <sys/types.h>
-#include <signal.h>
-
-void onExit(int sig)
+typedef struct package
 {
-    printf("End program\n");
-    exit(0);
-}
-
+    time_t time;
+    pid_t pid;
+} package;
 int main()
 {
-    signal(SIGINT, onExit);
     key_t key = ftok("file", 'a');
-    int data = shmget(key, 64, IPC_EXCL);
-    if (data == -1)
+    if (key == -1)
+    {
+        printf("ERROR");
+        return -1;
+    }
+    int shmid= shmget(key, 64, IPC_EXCL);
+    if (shmid == -1)
     {
         printf("ERROR\n");
-        exit(-1);
+        return -1;
     }
-    char* address = shmat(data, NULL, 0 );
-    if(address == (char*)-1)
+
+    void* data = shmat(shmid, NULL, 0);
+    package pack = *((package*)data);
+    if (data < 0)
     {
-        printf("ERROR\n");
-        exit(0);
+        printf("ERROR");
+        return -1;
     }
-    time_t timer = time(0);
-    printf("time input: %spid input: %d\n%s", ctime(&timer), getpid(), address);
+
+    time_t timer = time(NULL);
+    printf("Input time: %sInput pid: %d\n", ctime(&timer),getpid());
+    printf("Output time: %sOutput pid: %d\n", ctime(&pack.time), pack.pid);
     return 0;
 }
