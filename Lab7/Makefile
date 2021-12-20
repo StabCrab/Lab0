@@ -1,4 +1,4 @@
 all: comp
 comp:
-        gcc -pthread main.c -o rw
-        ./rw
+	gcc -pthread main.c -o rw
+	./rw
