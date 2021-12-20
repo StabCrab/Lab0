@@ -6,52 +6,42 @@
 #include <sys/shm.h>
 #include <string.h>
 #include <sys/types.h>
-#include <signal.h>
-int shmid;
 
-void atExit(int sig)
+typedef struct package
 {
-    printf("Program finished\n");
-    struct shmid_ds *buf = 0;
-    shmctl(shmid, IPC_RMID, buf);
-
-    exit(0);
-}
+    time_t time;
+    pid_t pid;
+} package;
 
 int main()
 {
-    signal(SIGINT, atExit);
     key_t key = ftok("file", 'a');
-    shmid = (shmget(key, 64, IPC_CREAT | 0666));
+    int shmid = shmget(key, 64, IPC_CREAT | 0666);
     if( shmid == -1 )
     {
         printf("Can't create shared memory\n");
-        exit(-1);
-    }
-    char * address = shmat(shmid, NULL, 0 );
-    if(address  == (char*)-1)
-    {
-        printf("Shmat err\n");
-        exit(-1);
+        return -1;
     }
 
-    time_t timer = time(0);
-    time_t bufTimer = timer;
+    time_t timer;
 
-    if (strlen(address) != 0)
-    {
-        printf("There is already output\n");
-        exit(-1);
-    }
-
+    package pack;
+    pack.pid = getpid();
     while(1)
     {
         timer = time(0);
-        if (timer != bufTimer)
+
+        pack.time = timer;
+
+        void* data = shmat(shmid, NULL,0);
+        if (data < 0)
         {
-            bufTimer = timer;
-            sprintf(address, "time output: %spid output: %d\n", ctime(&timer), getpid());
+            printf("ERROR");
+            return -1;
         }
+        *((package*)data) = pack;
+        sleep(5);
+        shmdt(data);
     }
     return 0;
 }
