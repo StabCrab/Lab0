@@ -25,6 +25,7 @@ int main()
         timer = array[0];
         printf("parent: %s", ctime(&timer));
         printf("parent pid: %ld", array[1]);
+        close(pipe_fd[0]);
     }
     else
     {
