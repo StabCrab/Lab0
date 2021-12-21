@@ -9,8 +9,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define MEM_NAME "file"
-
 typedef struct Package
 {
     time_t time;
@@ -21,7 +19,7 @@ struct sembuf sem_lock = { 0, -1, 0 };
 
 int main()
 {
-    key_t key = ftok(MEM_NAME, 'a');
+    key_t key = ftok("file", 'a');
     if (key == -1)
     {
         printf("ERROR");
