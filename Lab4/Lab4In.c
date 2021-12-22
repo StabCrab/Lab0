@@ -19,7 +19,7 @@ struct sembuf sem_lock = { 0, -1, 0 };
 
 int main()
 {
-    key_t key = ftok("file", 'a');
+    key_t key = ftok(MEM_NAME, 'a');
     if (key == -1)
     {
         printf("ERROR");
@@ -41,17 +41,22 @@ int main()
         exit(-1);
     }
 
-    semop(semID, &sem_lock, 1);
     void* buf = shmat(shmemID, NULL, 0);
     struct Package package = *((pack*)buf);
 
-    if (buf < 0) {
+    if (buf < 0)
+    {
         printf("ERROR");
         exit(-1);
     }
 
+    semop(semID, &sem_lock,1);
     time_t timer = time(NULL);
     printf("Input time: %sInput PID: %d\n", ctime(&timer), getpid());
     printf("Output time: %sOutput PID: %d\n", ctime(&(package.time)), package.pid);
+
+    semop(semID, &sem_open, 1);
+    shmdt(buf);
     return 0;
 }
+
