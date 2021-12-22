@@ -24,7 +24,6 @@ int main() {
     package.pid = getpid();
 
     key_t key = ftok("file", 'a');
-
     if (key == -1)
     {
         printf("ERROR");
@@ -33,14 +32,13 @@ int main() {
 
     int shmemID = shmget(key, sizeof(package), IPC_CREAT | 0666);
 
-    struct shmid_ds info;
-    shmctl(shmemID, IPC_STAT, &info);
-
     if (shmemID < 0)
     {
         printf("ERROR");
         return -1;
     }
+    struct shmid_ds info;
+    shmctl(shmemID, IPC_STAT, &info);
     if (info.shm_nattch >= 1)
     {
         printf("There is another process");
@@ -53,14 +51,14 @@ int main() {
         printf("ERROR");
         return -1;
     }
-    
-    semop(semID, &semOpen, 1);
 
+    void* buf = shmat(shmemID, NULL, 0);
+
+    semop(semID, &semOpen, 1);
     while (1)
     {
 
         semop(semID, &semLock, 1);
-        void* buf = shmat(shmemID, NULL, 0);
 
         if (buf < 0)
         {
@@ -71,7 +69,9 @@ int main() {
         *((pack*)buf) = package;
         semop(semID, &semOpen, 1);
         sleep(5);
-        shmdt(buf);
     }
+    semctl(semID, 0, IPC_RMID);
+    shmdt(buf);
+    shmctl(shmemID, IPC_RMID, NULL);
     return 0;
 }
