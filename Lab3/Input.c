@@ -24,6 +24,11 @@ int main()
     }
 
     void* data = shmat(shmid, NULL, 0);
+    if (data == (void*)-1)
+    {
+            printf("ERROR");
+            return -1;
+    }
     package pack = *((package*)data);
     if (data < 0)
     {
@@ -34,5 +39,6 @@ int main()
     time_t timer = time(NULL);
     printf("Input time: %sInput pid: %d\n", ctime(&timer),getpid());
     printf("Output time: %sOutput pid: %d\n", ctime(&pack.time), pack.pid);
+    shmdt(data);
     return 0;
 }
