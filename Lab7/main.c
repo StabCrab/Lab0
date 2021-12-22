@@ -10,10 +10,10 @@ void* outputThreadFunc()
 {
     while (1)
     {
-        sleep(1);
-        pthread_rwlock_rdlock(&lock);
+        pthread_rwlock_wrlock(&lock);
         a++;
         pthread_rwlock_unlock(&lock);
+        sleep(1);
     }
 }
 
@@ -21,7 +21,7 @@ void* inputThreadFunc()
 {
     while (1)
     {
-        pthread_rwlock_wrlock(&lock);
+        pthread_rwlock_rdlock(&lock);
         printf("tid: %ld, ", pthread_self());
         printf("%d\n", a);
         pthread_rwlock_unlock(&lock);
