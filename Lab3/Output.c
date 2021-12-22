@@ -35,17 +35,18 @@ int main()
 
     struct shmid_ds check;
     shmctl(shmid, IPC_STAT, &check);
-    if (check.shm_nattch >= 1)
-    {
-        printf("%s\n", "Output already exists");
-        return -1;
-    }
     void* data = shmat(shmid, NULL,0);
     if (data == (void*) -1)
     {
         printf("ERROR");
         return -1;
     }
+    if (check.shm_nattch >= 1)
+    {
+        printf("%s\n", "Output already exists");
+        return -1;
+    }
+
     while(1)
     {
         timer = time(0);
@@ -61,7 +62,6 @@ int main()
         sleep(5);
     }
     shmdt(data);
-    shmctl(shmid, IPC_RMID, &check);
+    shmctl(shmid, IPC_RMID, NULL);
     return 0;
 }
-
