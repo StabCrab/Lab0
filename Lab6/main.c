@@ -14,8 +14,8 @@ void* outputThreadFunc()
         sleep(1);
         pthread_mutex_lock(&mutex);
         a++;
-        pthread_mutex_unlock(&mutex);
         pthread_cond_broadcast(&cond);
+        pthread_mutex_unlock(&mutex);
     }
 }
 
@@ -23,7 +23,9 @@ void* inputThreadFunc()
 {
     while (1)
     {
+        pthread_mutex_lock(&mutex);
         pthread_cond_wait(&cond, &mutex);
+        pthread_mutex_unlock(&mutex);
         printf("tid: %ld, ", pthread_self());
         printf("%d\n", a);
     }
